@@ -1,1 +1,19 @@
-spring.application.name=Flow_manager
+server:
+  port: 8080
+spring:
+  application:
+    name: Flow_manager
+  liquibase:
+    enabled: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: 123
+
+minio:
+  user: userminio
+  password: minio123
+  port: 9000
+  buckets:
+    pdf-bucket: "pdf-bucket"
+    non-pdf-bucket: "non-pdf-bucket"
