@@ -1,7 +1,7 @@
 package org.flow_manager.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.flow_manager.model.record.FlowManagerResponse;
+import org.flow_manager.model.dto.FlowManagerResponse;
 import org.flow_manager.service.FlowManagerService;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;

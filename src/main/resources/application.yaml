@@ -3,12 +3,22 @@ server:
 spring:
   application:
     name: Flow_manager
-  liquibase:
-    enabled: false
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: 123
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  liquibase:
+    enabled: true
+    change-log: db/changelog/db.changelog-master.yaml
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 minio:
   user: userminio
@@ -17,3 +27,11 @@ minio:
   buckets:
     pdf-bucket: "pdf-bucket"
     non-pdf-bucket: "non-pdf-bucket"
+
+kafka:
+  server: 9092:9092
+  group_id: file_path
+  topics:
+    pdf-converter-topic: pdf-converter-topic
+    success-converter-topic: success-converter-topic
+    error-converter-topic: error-converter-topic

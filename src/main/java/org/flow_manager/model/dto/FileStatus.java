@@ -1,4 +1,4 @@
-package org.flow_manager.model.record;
+package org.flow_manager.model.dto;
 
 public enum FileStatus {
     SUCCESS,

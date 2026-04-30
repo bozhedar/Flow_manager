@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -21,7 +22,7 @@ public class MinIOService {
     private String targetBucket;
     private final MinioClient minioClient;
 
-    public InputStream readFromBucket(String objectName) throws Exception {
+    public InputStream readFromPdfBucket(String objectName) throws Exception {
         return minioClient.getObject(
                 GetObjectArgs.builder()
                         .bucket(sourceBucket)
@@ -30,14 +31,14 @@ public class MinIOService {
         );
     }
 
-    public void writeToBucket(String objectName, byte[] data) throws Exception {
-        minioClient.putObject(
-                PutObjectArgs.builder()
-                        .bucket(targetBucket)
-                        .object(objectName)
-                        .stream(new ByteArrayInputStream(data), (long) data.length, (long) -1)
-                        .contentType("application/pdf")
-                        .build()
-        );
+    public void writeToBucket(String objectName, MultipartFile file) throws Exception {
+        try (InputStream stream = file.getInputStream()) {
+            minioClient.putObject(PutObjectArgs.builder()
+                    .bucket(sourceBucket)
+                    .object(objectName)
+                    .stream(stream, file.getSize(), -1L)
+                    .contentType(file.getContentType())
+                    .build());
+        }
     }
 }

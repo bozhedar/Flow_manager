@@ -1,0 +1,7 @@
+CREATE TABLE file_record (
+  id BIGSERIAL PRIMARY KEY,
+  file_path VARCHAR(128) NOT NULL,
+  status VARCHAR(16) DEFAULT 'IN_PROGRESS',
+
+  CONSTRAINT chk_file_status CHECK (status IN ('SUCCESS','IN_PROGRESS','ERROR','UPLOADED'))
+);
