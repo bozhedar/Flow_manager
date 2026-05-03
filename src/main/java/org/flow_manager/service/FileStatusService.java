@@ -1,4 +1,4 @@
-package org.flow_manager.kafka;
+package org.flow_manager.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,20 +7,17 @@ import org.flow_manager.kafka.event.ErrorEvent;
 import org.flow_manager.kafka.event.FileConversionEvent;
 import org.flow_manager.model.FileRecord;
 import org.flow_manager.model.dto.FileStatus;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.NoSuchElementException;
 
-@Component
-@Slf4j
+@Service
 @RequiredArgsConstructor
-public class KafkaConsumer {
+@Slf4j
+public class FileStatusService {
     private final FileRecordRepository fileRecordRepository;
 
-    @KafkaListener(topics = "${kafka.topics.success-converter-topic}", groupId = "${kafka.group_id}")
-    public void consumeProcessedPath(FileConversionEvent event) {
-        log.debug("Received processed path event: {}", event.id());
+    public void handleConvertedFile(FileConversionEvent event) {
         FileRecord fileRecord = fileRecordRepository.findById(event.id())
                 .orElseThrow(() -> {
                     log.error("FileRecord not found with id {}", event.id());
@@ -31,9 +28,7 @@ public class KafkaConsumer {
         fileRecordRepository.save(fileRecord);
     }
 
-    @KafkaListener(topics = "${kafka.topics.error-converter-topic}", groupId = "${kafka.group_id}")
-    public void consumeErrorPath(ErrorEvent event) {
-        log.debug("Received error event: {}", event.id());
+    public void handleErrorEvent(ErrorEvent event) {
         FileRecord fileRecord = fileRecordRepository.findById(event.id())
                 .orElseThrow(() -> {
                     log.error("FileRecord not found with id {}", event.id());

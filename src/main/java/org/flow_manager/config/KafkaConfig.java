@@ -1,7 +1,7 @@
 package org.flow_manager.config;
 
 
-import com.fasterxml.jackson.databind.JsonSerializer;
+import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.LongSerializer;
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaAdmin;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 
@@ -31,6 +32,13 @@ public class KafkaConfig {
     private String kafkaServer;
 
     @Bean
+    public KafkaAdmin kafkaAdmin() {
+        Map<String, Object> configs = new HashMap<>();
+        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        return new KafkaAdmin(configs);
+    }
+
+    @Bean
     public NewTopic nonProcessedPathTopic() {
         return new NewTopic(nonProcessedPathTopic, 1, (short) 1);
     }
@@ -46,12 +54,19 @@ public class KafkaConfig {
     @Bean
     public Map<String, Object> producerConfigs() {
         Map<String, Object> props = new HashMap<>();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
-                kafkaServer);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                LongSerializer.class);
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
+
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                JsonSerializer.class);
+                org.springframework.kafka.support.serializer.JacksonJsonSerializer.class);
+
+        props.put("spring.json.add.type.headers", false);
+        props.put("spring.json.trusted.packages", "org.flow_manager.*");
+
+        props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        props.put(ProducerConfig.RETRIES_CONFIG, 3);
+
         return props;
     }
 

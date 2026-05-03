@@ -5,3 +5,10 @@ CREATE TABLE file_record (
 
   CONSTRAINT chk_file_status CHECK (status IN ('SUCCESS','IN_PROGRESS','ERROR','UPLOADED'))
 );
+
+CREATE TABLE outbox_event (
+    id BIGSERIAL PRIMARY KEY,
+    payload JSONB NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    outbox_type VARCHAR(20)
+);

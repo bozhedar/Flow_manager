@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public ResponseEntity<ErrorResponse> handleMaxSize(MaxUploadSizeExceededException ex) {
         log.warn("File upload size exceeded");
-        return buildResponse(HttpStatus.PAYLOAD_TOO_LARGE, "Payload Too Large",
+        return buildResponse(HttpStatus.CONTENT_TOO_LARGE, "Payload Too Large",
                 "Размер файла превышает допустимый лимит");
     }
 

@@ -1,26 +1,33 @@
 package org.flow_manager.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flow_manager.dao.FileRecordRepository;
 import org.flow_manager.exception.MinIOClientException;
-import org.flow_manager.kafka.KafkaProducer;
+import org.flow_manager.kafka.event.ErrorEvent;
 import org.flow_manager.kafka.event.FileConversionEvent;
 import org.flow_manager.model.FileRecord;
+import org.flow_manager.model.OutboxEvent;
+import org.flow_manager.model.OutboxType;
 import org.flow_manager.model.dto.FileStatus;
 import org.flow_manager.model.dto.FlowManagerResponse;
+import org.flow_manager.service.outbox.OutboxEventService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class FlowManagerService {
     private final MinIOService minioService;
     private final FileRecordRepository fileRecordRepository;
-    private final KafkaProducer kafkaProducer;
+    private final OutboxEventService outboxEventService;
+    private final ObjectMapper objectMapper;
 
     public FlowManagerResponse sendFile(MultipartFile file) {
         String fileName = file.getOriginalFilename();
@@ -44,7 +51,15 @@ public class FlowManagerService {
 
         fileRecord.setStatus(FileStatus.UPLOADED);
         fileRecordRepository.save(fileRecord);
-        kafkaProducer.sendToPdfConverterTopic(new FileConversionEvent(fileRecord.getId(),  fileRecord.getFilePath()));
+
+        outboxEventService.createOutboxEvent(
+                OutboxEvent.builder()
+                        .outboxType(OutboxType.CONVERTER)
+                        .payload(objectMapper.writeValueAsString(
+                                new FileConversionEvent(fileRecord.getId(),
+                                        fileRecord.getFilePath())
+                        ))
+                        .build());
 
         log.info("File uploaded successfully");
         return new FlowManagerResponse(
@@ -99,4 +114,5 @@ public class FlowManagerService {
 
         return (slashIndex == -1) ? trimmed : trimmed.substring(slashIndex + 1);
     }
+
 }
