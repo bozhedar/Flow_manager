@@ -32,13 +32,6 @@ public class KafkaConfig {
     private String kafkaServer;
 
     @Bean
-    public KafkaAdmin kafkaAdmin() {
-        Map<String, Object> configs = new HashMap<>();
-        configs.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, kafkaServer);
-        return new KafkaAdmin(configs);
-    }
-
-    @Bean
     public NewTopic nonProcessedPathTopic() {
         return new NewTopic(nonProcessedPathTopic, 1, (short) 1);
     }

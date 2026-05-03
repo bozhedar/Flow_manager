@@ -29,7 +29,7 @@ minio:
     non-pdf-bucket: "non-pdf-bucket"
 
 kafka:
-  server: 9092:9092
+  server: localhost:9092
   group_id: file_path
   topics:
     pdf-converter-topic: pdf-converter-topic
