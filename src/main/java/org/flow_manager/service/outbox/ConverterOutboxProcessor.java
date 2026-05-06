@@ -19,6 +19,7 @@ public class ConverterOutboxProcessor implements OutboxProcessor{
     @Override
     public void processOutboxEvent(OutboxEvent outboxEvent) {
         FileConversionEvent event = objectMapper.readValue(outboxEvent.getPayload(), FileConversionEvent.class);
+
         producer.sendToPdfConverterTopic(event);
     }
 }

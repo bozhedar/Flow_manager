@@ -21,36 +21,35 @@ import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
-@Transactional
 @RequiredArgsConstructor
 public class FlowManagerService {
     private final MinIOService minioService;
     private final FileRecordRepository fileRecordRepository;
     private final OutboxEventService outboxEventService;
     private final ObjectMapper objectMapper;
+    private final FlowManagerService transactionalFMService;
 
     public FlowManagerResponse sendFile(MultipartFile file) {
         String fileName = file.getOriginalFilename();
         String filePath = minioService.getSourceBucket() + "/" + fileName;
 
 
-        FileRecord fileRecord = fileRecordRepository.save(
+        FileRecord fileRecord = transactionalFMService.saveToFileRecordDB(
                 FileRecord.builder()
-                    .filePath(filePath)
-                    .build()
-        );
+                        .filePath(filePath)
+                        .build());
 
         try {
             minioService.writeToBucket(fileName, file);
         } catch (Exception e) {
             fileRecord.setStatus(FileStatus.ERROR);
-            fileRecordRepository.save(fileRecord);
+            transactionalFMService.saveToFileRecordDB(fileRecord);
             log.error(e.getMessage());
             throw new MinIOClientException(e.getMessage());
         }
 
         fileRecord.setStatus(FileStatus.UPLOADED);
-        fileRecordRepository.save(fileRecord);
+        transactionalFMService.saveToFileRecordDB(fileRecord);
 
         outboxEventService.createOutboxEvent(
                 OutboxEvent.builder()
@@ -105,6 +104,11 @@ public class FlowManagerService {
                     null
             );
         }
+    }
+
+    @Transactional
+    public FileRecord saveToFileRecordDB(FileRecord fileRecord) {
+        return fileRecordRepository.save(fileRecord);
     }
 
     private String extractObjectKey(String minioFullPath) {
