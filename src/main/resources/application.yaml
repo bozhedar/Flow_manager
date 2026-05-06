@@ -24,6 +24,7 @@ minio:
   user: userminio
   password: minio123
   port: 9000
+  host: localhost
   buckets:
     pdf-bucket: "pdf-bucket"
     non-pdf-bucket: "non-pdf-bucket"

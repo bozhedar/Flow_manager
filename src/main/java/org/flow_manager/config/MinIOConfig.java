@@ -19,12 +19,14 @@ public class MinIOConfig {
     private String password;
     @Value("${minio.port}")
     private int port;
+    @Value("${minio.host}")
+    private String host;
 
     @Bean
     public MinioClient minioClient() throws Exception {
         return MinioClient.builder()
                 .credentials(username, password)
-                .endpoint("http://localhost:" + port)
+                .endpoint("http://" + host + ":" + port)
                 .build();
     }
 
