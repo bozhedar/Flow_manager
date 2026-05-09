@@ -11,14 +11,17 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.flow_manager.model.dto.FileStatus;
 
 @Entity
 @Table(name = "file_record")
-@Data
 @NoArgsConstructor
 @Builder
+@Getter
+@Setter
 @AllArgsConstructor
 public class FileRecord {
 
