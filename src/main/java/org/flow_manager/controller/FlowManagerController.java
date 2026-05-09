@@ -18,8 +18,8 @@ public class FlowManagerController {
     private final FlowManagerService flowManagerService;
 
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public FlowManagerResponse sendFile(@RequestParam("file") MultipartFile file) {
-        return flowManagerService.sendFile(file);
+    public FlowManagerResponse uploadFile(@RequestParam("file") MultipartFile file) {
+        return flowManagerService.uploadFile(file);
     }
 
     @GetMapping("/status")

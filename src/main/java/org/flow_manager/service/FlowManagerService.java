@@ -1,11 +1,9 @@
 package org.flow_manager.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flow_manager.dao.FileRecordRepository;
 import org.flow_manager.exception.MinIOClientException;
-import org.flow_manager.kafka.event.ErrorEvent;
 import org.flow_manager.kafka.event.FileConversionEvent;
 import org.flow_manager.model.FileRecord;
 import org.flow_manager.model.OutboxEvent;
@@ -13,6 +11,7 @@ import org.flow_manager.model.OutboxType;
 import org.flow_manager.model.dto.FileStatus;
 import org.flow_manager.model.dto.FlowManagerResponse;
 import org.flow_manager.service.outbox.OutboxEventService;
+import org.flow_manager.util.TransactionalUtil;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
@@ -25,40 +24,26 @@ import java.util.NoSuchElementException;
 public class FlowManagerService {
     private final MinIOService minioService;
     private final FileRecordRepository fileRecordRepository;
-    private final OutboxEventService outboxEventService;
-    private final ObjectMapper objectMapper;
-    private final FlowManagerService transactionalFMService;
+    private final TransactionalUtil transactionalUtil;
 
-    public FlowManagerResponse sendFile(MultipartFile file) {
+
+    public FlowManagerResponse uploadFile(MultipartFile file) {
         String fileName = file.getOriginalFilename();
         String filePath = minioService.getSourceBucket() + "/" + fileName;
 
-
-        FileRecord fileRecord = transactionalFMService.saveToFileRecordDB(
-                FileRecord.builder()
-                        .filePath(filePath)
-                        .build());
+        FileRecord fileRecord = transactionalUtil.saveFileRecord(filePath);
 
         try {
             minioService.writeToBucket(fileName, file);
         } catch (Exception e) {
             fileRecord.setStatus(FileStatus.ERROR);
-            transactionalFMService.saveToFileRecordDB(fileRecord);
+            fileRecordRepository.save(fileRecord);
             log.error(e.getMessage());
             throw new MinIOClientException(e.getMessage());
         }
 
         fileRecord.setStatus(FileStatus.UPLOADED);
-        transactionalFMService.saveToFileRecordDB(fileRecord);
-
-        outboxEventService.createOutboxEvent(
-                OutboxEvent.builder()
-                        .outboxType(OutboxType.CONVERTER)
-                        .payload(objectMapper.writeValueAsString(
-                                new FileConversionEvent(fileRecord.getId(),
-                                        fileRecord.getFilePath())
-                        ))
-                        .build());
+        fileRecordRepository.save(fileRecord);
 
         log.info("File uploaded successfully");
         return new FlowManagerResponse(
@@ -104,11 +89,6 @@ public class FlowManagerService {
                     null
             );
         }
-    }
-
-    @Transactional
-    public FileRecord saveToFileRecordDB(FileRecord fileRecord) {
-        return fileRecordRepository.save(fileRecord);
     }
 
     private String extractObjectKey(String minioFullPath) {
