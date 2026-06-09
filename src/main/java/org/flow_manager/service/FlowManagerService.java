@@ -3,18 +3,16 @@ package org.flow_manager.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.flow_manager.dao.FileRecordRepository;
+import org.flow_manager.exception.FileSizeException;
 import org.flow_manager.exception.MinIOClientException;
-import org.flow_manager.kafka.event.FileConversionEvent;
+import org.flow_manager.feign.SubscribeClient;
 import org.flow_manager.model.FileRecord;
-import org.flow_manager.model.OutboxEvent;
-import org.flow_manager.model.OutboxType;
 import org.flow_manager.model.dto.FileStatus;
 import org.flow_manager.model.dto.FlowManagerResponse;
-import org.flow_manager.service.outbox.OutboxEventService;
 import org.flow_manager.util.TransactionalUtil;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import tools.jackson.databind.ObjectMapper;
 
 import java.util.NoSuchElementException;
 
@@ -25,9 +23,16 @@ public class FlowManagerService {
     private final MinIOService minioService;
     private final FileRecordRepository fileRecordRepository;
     private final TransactionalUtil transactionalUtil;
+    private final SubscribeCacheService subscribeCacheService;
 
+    @Value("${file-size.paid}")
+    private long PAID_FILE_SIZE;
+    @Value("${file-size.free}")
+    private long FREE_FILE_SIZE;
 
-    public FlowManagerResponse uploadFile(MultipartFile file) {
+    public FlowManagerResponse uploadFile(MultipartFile file, String login) {
+        checkSubscribe(file, login);
+
         String fileName = file.getOriginalFilename();
         String filePath = minioService.getSourceBucket() + "/" + fileName;
 
@@ -99,4 +104,20 @@ public class FlowManagerService {
         return (slashIndex == -1) ? trimmed : trimmed.substring(slashIndex + 1);
     }
 
+    private void checkSubscribe(MultipartFile file, String login) {
+        long fileSizeMB =  file.getSize() / (1024^2);
+
+        if (subscribeCacheService
+                .getSubscriptionStatus(login)
+                .isPaidSubscribe()) {
+            if (fileSizeMB > PAID_FILE_SIZE) {
+                throw new FileSizeException("File size must be less than 100MB");
+            }
+
+        } else  {
+            if (fileSizeMB > FREE_FILE_SIZE) {
+                throw new FileSizeException("File size must be less than 50MB");
+            }
+        }
+    }
 }

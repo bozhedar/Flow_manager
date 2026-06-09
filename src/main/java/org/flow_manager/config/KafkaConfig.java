@@ -27,6 +27,10 @@ public class KafkaConfig {
     private String processedPathTopic;
     @Value("${kafka.topics.error-converter-topic}")
     private String errorTopic;
+    @Value("${kafka.topics.subscribe-expired-topic}")
+    private String subscribeExpiredTopic;
+    @Value("${kafka.topics.subscribe-paid-topic}")
+    private String subscribePaidTopic;
 
     @Value("${kafka.server}")
     private String kafkaServer;
@@ -43,6 +47,10 @@ public class KafkaConfig {
     public NewTopic errorTopic() {
         return new NewTopic(errorTopic, 1, (short) 1);
     }
+    @Bean
+    public NewTopic subscribePaidTopic() {return new NewTopic(subscribePaidTopic, 1, (short) 1);}
+    @Bean
+    public NewTopic subscribeExpiredTopic() {return new NewTopic(subscribeExpiredTopic, 1, (short) 1);}
 
     @Bean
     public Map<String, Object> producerConfigs() {
