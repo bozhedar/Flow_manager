@@ -7,6 +7,11 @@ spring:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
     password: 123
+  cloud:
+    discovery:
+      enabled: true
+    loadbalancer:
+      enabled: true         
   jpa:
     hibernate:
       ddl-auto: validate
@@ -17,8 +22,19 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: 50MB
-      max-request-size: 50MB
+      max-file-size: 100MB
+      max-request-size: 100MB
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+
+  cache:
+    type: redis
+    redis:
+      time-to-live: 2000000
+      cache-null-values: false
 
 minio:
   user: userminio
@@ -36,3 +52,20 @@ kafka:
     pdf-converter-topic: pdf-converter-topic
     success-converter-topic: success-converter-topic
     error-converter-topic: error-converter-topic
+    subscribe-expired-topic: subscribe-expired-topic
+    subscribe-paid-topic: subscribe-paid-topic
+
+subscribe:
+  url: http://localhost:8087
+
+feign:
+  client:
+    config:
+      default:
+        loggerLevel: BASIC
+        connectTimeout: 5000
+        readTimeout: 10000
+
+file-size:
+  paid: 100
+  free: 50
