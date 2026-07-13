@@ -4,14 +4,14 @@ spring:
   application:
     name: Flow_manager
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: jdbc:postgresql://postgres:5432/postgres
     username: postgres
     password: 123
   cloud:
     discovery:
       enabled: true
     loadbalancer:
-      enabled: true         
+      enabled: true
   jpa:
     hibernate:
       ddl-auto: validate
@@ -26,9 +26,9 @@ spring:
       max-request-size: 100MB
   data:
     redis:
-      host: localhost
+      host: redis-server
       port: 6379
-
+      password: redis
 
   cache:
     type: redis
@@ -40,13 +40,13 @@ minio:
   user: userminio
   password: minio123
   port: 9000
-  host: localhost
+  host: minio
   buckets:
     pdf-bucket: "pdf-bucket"
     non-pdf-bucket: "non-pdf-bucket"
 
 kafka:
-  server: localhost:9092
+  server: kafka:9092
   group_id: file_path
   topics:
     pdf-converter-topic: pdf-converter-topic
@@ -56,7 +56,7 @@ kafka:
     subscribe-paid-topic: subscribe-paid-topic
 
 subscribe:
-  url: http://localhost:8087
+  url: http://subscribe:8087
 
 feign:
   client:
@@ -69,3 +69,18 @@ feign:
 file-size:
   paid: 100
   free: 50
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  metrics:
+    tags:
+      application: Flow_manager
+    export:
+      prometheus:
+        enabled: true
